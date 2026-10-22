@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Name & Email Sanitizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(156, 163, 175, 0.7); }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-user-check text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight text-white">Employee Name & Email Sanitizer</h1>
+          <p class="text-xs text-slate-400">Google Sites Embed Compatible • Period/Dot Stripper • Auto Comma Stripping & Email Generator</p>
+        </div>
+      </div>
+      <button id="loadSampleBtn" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-vial text-indigo-400"></i> Load Test Batch
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid Layout -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- Left Column: Input & Options -->
+    <div class="lg:col-span-5 flex flex-col space-y-4">
+      
+      <!-- Input Textarea -->
+      <div class="bg-slate-800/60 rounded-2xl border border-slate-700/60 p-4 flex flex-col flex-1 shadow-sm">
+        <div class="flex justify-between items-center mb-2">
+          <label for="inputNames" class="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <i class="fa-solid fa-list-ul text-indigo-400"></i> Raw Input Names
+          </label>
+          <span id="inputCount" class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400">0 lines</span>
+        </div>
+        <textarea id="inputNames" rows="8" placeholder="Paste employee list here (one per line)...&#10;Arthur Brassart ✔&#10;Dan Garcia, MBA, CSM, CSPO&#10;Jane Smith, AIA, LEED AP, CM-BIM&#10;A.J. St. John Jr.&#10;John Doe, M.A., MPH, CFSP, P.E. 林玥妤&#10;Arne Magnus Bassøe-eriksen&#10;Michał Topolski&#10;Ma Salvacion &quot;Zion&quot; Lamasan" 
+          class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 custom-scrollbar resize-none font-mono flex-1"></textarea>
+      </div>
+
+      <!-- Cleaning Controls -->
+      <div class="bg-slate-800/60 rounded-2xl border border-slate-700/60 p-4 space-y-3 shadow-sm">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-300 border-b border-slate-700/60 pb-2 flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-indigo-400"></i> Sanitization Settings
+        </h2>
+        
+        <!-- Primary Rules Highlighted -->
+        <div class="space-y-2">
+          <div class="p-2.5 bg-indigo-950/50 border border-indigo-500/40 rounded-xl">
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="checkbox" id="optStripAfterComma" checked class="w-4 h-4 rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+              <span class="text-xs font-semibold text-indigo-200">Remove everything after comma (", MBA, AIA, P.E.")</span>
+            </label>
+          </div>
+
+          <div class="p-2.5 bg-purple-950/50 border border-purple-500/40 rounded-xl">
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="checkbox" id="optPeriods" checked class="w-4 h-4 rounded border-slate-700 text-purple-500 focus:ring-purple-500 bg-slate-900">
+              <span class="text-xs font-semibold text-purple-200">Remove periods/dots (.) from names (e.g., "A.J." &rarr; "AJ")</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <!-- Non-Latin / Chinese -->
+          <label class="flex items-center space-x-2 bg-slate-900/50 hover:bg-slate-900 p-2 rounded-lg cursor-pointer border border-slate-800 transition">
+            <input type="checkbox" id="optNonLatin" checked class="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+            <span class="text-slate-300">Remove Chinese / Non-Latin (林玥妤)</span>
+          </label>
+
+          <!-- Verification Symbols / Badges -->
+          <label class="flex items-center space-x-2 bg-slate-900/50 hover:bg-slate-900 p-2 rounded-lg cursor-pointer border border-slate-800 transition">
+            <input type="checkbox" id="optSymbols" checked class="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+            <span class="text-slate-300">Remove Badges & Symbols (✔, ★)</span>
+          </label>
+
+          <!-- Accents / ø / ł -->
+          <label class="flex items-center space-x-2 bg-slate-900/50 hover:bg-slate-900 p-2 rounded-lg cursor-pointer border border-slate-800 transition">
+            <input type="checkbox" id="optAccents" checked class="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+            <span class="text-slate-300">Convert ø &rarr; o, ł &rarr; l, accents</span>
+          </label>
+
+          <!-- Parentheses -->
+          <label class="flex items-center space-x-2 bg-slate-900/50 hover:bg-slate-900 p-2 rounded-lg cursor-pointer border border-slate-800 transition">
+            <input type="checkbox" id="optParentheses" checked class="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+            <span class="text-slate-300">Remove (brackets) & [notes]</span>
+          </label>
+
+          <!-- Quotes / Nicknames -->
+          <label class="flex items-center space-x-2 bg-slate-900/50 hover:bg-slate-900 p-2 rounded-lg cursor-pointer border border-slate-800 transition">
+            <input type="checkbox" id="optQuotes" checked class="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+            <span class="text-slate-300">Remove "Nicknames" / Quotes</span>
+          </label>
+
+          <!-- Apostrophes -->
+          <label class="flex items-center space-x-2 bg-slate-900/50 hover:bg-slate-900 p-2 rounded-lg cursor-pointer border border-slate-800 transition">
+            <input type="checkbox" id="optApostrophes" checked class="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+            <span class="text-slate-300">Remove O'connor apostrophes</span>
+          </label>
+
+          <!-- Generational Suffixes -->
+          <label class="flex items-center space-x-2 bg-slate-900/50 hover:bg-slate-900 p-2 rounded-lg cursor-pointer border border-slate-800 transition">
+            <input type="checkbox" id="optSuffixes" checked class="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+            <span class="text-slate-300">Remove Jr, Sr, II, III, IV</span>
+          </label>
+
+          <!-- Deduplication -->
+          <label class="flex items-center space-x-2 bg-slate-900/50 hover:bg-slate-900 p-2 rounded-lg cursor-pointer border border-slate-800 transition">
+            <input type="checkbox" id="optDedupe" checked class="rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-900">
+            <span class="text-slate-300">Remove Duplicate Names</span>
+          </label>
+        </div>
+
+        <!-- Custom Unwanted Words Input -->
+        <div class="pt-2 border-t border-slate-700/60">
+          <label class="block text-xs font-medium text-slate-400 mb-1">Custom Unwanted Words / Titles to Remove (comma-separated)</label>
+          <input type="text" id="optCustomWords" placeholder="e.g. Founder, CEO, Manager" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+        </div>
+
+        <!-- Casing & Email Domain -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-700/60 text-xs">
+          <div>
+            <label class="block font-medium text-slate-400 mb-1">Letter Casing</label>
+            <select id="optCasing" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <option value="title" selected>Title Case (John Doe)</option>
+              <option value="upper">UPPERCASE (JOHN DOE)</option>
+              <option value="lower">lowercase (john doe)</option>
+              <option value="original">Preserve Case</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-400 mb-1">Email Domain</label>
+            <input type="text" id="optDomain" value="company.com" placeholder="company.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono text-xs">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Outputs & Google Sites Compatible Copy Area -->
+    <div class="lg:col-span-7 flex flex-col space-y-4">
+      
+      <div class="bg-slate-800/60 rounded-2xl border border-slate-700/60 p-4 flex flex-col flex-1 shadow-sm relative">
+        
+        <!-- Tab Controls & Quick Copy Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-slate-700/60 pb-3">
+          <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-medium">
+            <button id="viewListBtn" class="px-3 py-1.5 rounded-lg text-white bg-indigo-600 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-list"></i> Cleaned List
+            </button>
+            <button id="viewEmailsBtn" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5">
+              <i class="fa-solid fa-envelope"></i> Email IDs
+            </button>
+            <button id="viewTableBtn" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5">
+              <i class="fa-solid fa-table-columns"></i> Diff View
+            </button>
+          </div>
+
+          <!-- Action Buttons (Optimized for Google Sites Sandbox) -->
+          <div class="flex items-center space-x-2">
+            <button id="openCopyDrawerBtn" class="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg transition flex items-center gap-1.5 shadow-md shadow-indigo-600/30">
+              <i class="fa-solid fa-copy"></i> Select & Copy (Ctrl+C)
+            </button>
+            <button id="exportCsvBtn" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-csv text-emerald-400"></i> Download CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Output Display Panels -->
+        <div class="relative flex-1 min-h-[360px]">
+          
+          <!-- View 1: Cleaned Names List -->
+          <div id="viewList" class="absolute inset-0 overflow-y-auto custom-scrollbar space-y-2 pr-1"></div>
+
+          <!-- View 2: Generated Emails -->
+          <div id="viewEmails" class="absolute inset-0 overflow-y-auto custom-scrollbar space-y-2 pr-1 hidden"></div>
+
+          <!-- View 3: Comparison Table -->
+          <div id="viewTable" class="absolute inset-0 overflow-y-auto custom-scrollbar hidden">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="text-xs uppercase bg-slate-900/90 text-slate-400 sticky top-0 border-b border-slate-700">
+                <tr>
+                  <th class="py-2.5 px-3">#</th>
+                  <th class="py-2.5 px-3">Original Raw Input</th>
+                  <th class="py-2.5 px-3">Cleaned Full Name</th>
+                  <th class="py-2.5 px-3">Generated Email</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- Footer Summary Stats -->
+        <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400 font-mono">
+          <div>Processed: <span id="statTotal" class="text-indigo-400 font-semibold">0</span> | Cleaned: <span id="statCleaned" class="text-emerald-400 font-semibold">0</span></div>
+          <div>Duplicates Removed: <span id="statDupes" class="text-amber-400 font-semibold">0</span></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Google Sites Copy Drawer / Overlay Modal -->
+  <div id="copyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 shadow-2xl flex flex-col space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2 text-white font-semibold text-sm">
+          <i class="fa-solid fa-copy text-indigo-400"></i> Google Sites Copy Assistant
+        </div>
+        <button id="closeCopyDrawerBtn" class="text-slate-400 hover:text-white text-sm px-2 py-1 rounded-lg bg-slate-800">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Because Google Sites embeds code in a sandboxed frame, direct background clipboard copying can be restricted. Select what you want below—text is automatically highlighted so you can press <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-indigo-300 font-mono">Ctrl + C</kbd> (or <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-indigo-300 font-mono">Cmd + C</kbd>) to copy immediately!
+      </p>
+
+      <!-- Selection Tabs -->
+      <div class="flex items-center gap-2">
+        <button id="modalNamesTab" class="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white font-medium">Cleaned Names</button>
+        <button id="modalEmailsTab" class="px-3 py-1.5 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-white font-medium">Email Addresses</button>
+      </div>
+
+      <!-- Textarea containing selectable text -->
+      <textarea id="modalCopyTextarea" rows="10" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-emerald-300 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 custom-scrollbar"></textarea>
+
+      <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+        <span id="modalCopyStatus" class="text-xs text-slate-400 italic">Text auto-selected! Press Ctrl+C now.</span>
+        <div class="flex items-center gap-2">
+          <button id="modalSelectAllBtn" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700">
+            Re-highlight Text
+          </button>
+          <button id="modalCloseDoneBtn" class="px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-indigo-600 text-white px-4 py-2.5 rounded-xl shadow-xl text-xs font-medium flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <i class="fa-solid fa-circle-check"></i> <span id="toastMsg">Action completed!</span>
+  </div>
+
+  <script>
+    // --- Mappings & Dictionaries ---
+    const charMap = {
+      'ł': 'l', 'Ł': 'L',
+      'ø': 'o', 'Ø': 'O',
+      'æ': 'ae', 'Æ': 'AE',
+      'ß': 'ss',
+      'đ': 'd', 'Ð': 'D',
+      'þ': 'th', 'Þ': 'TH',
+      'œ': 'oe', 'Œ': 'OE'
+    };
+
+    const generationalSuffixes = ['II', 'III', 'IV', 'V', 'VI', 'Jr.', 'Jr', 'Sr.', 'Sr'];
+
+    const sampleBatch = `Arthur Brassart ✔
+Dan Garcia, MBA, CSM, CSPO
+Jane Smith, AIA, LEED AP, CM-BIM
+A.J. St. John Jr.
+John Doe, M.A., MPH, CFSP, P.E. 林玥妤
+Arne Magnus Bassøe-eriksen
+Michał Topolski
+Ma Salvacion "Zion" Lamasan
+John O'connor`;
+
+    // DOM Elements
+    const inputNames = document.getElementById('inputNames');
+    const inputCount = document.getElementById('inputCount');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
+    
+    // Checkboxes & Inputs
+    const optStripAfterComma = document.getElementById('optStripAfterComma');
+    const optPeriods = document.getElementById('optPeriods');
+    const optNonLatin = document.getElementById('optNonLatin');
+    const optSymbols = document.getElementById('optSymbols');
+    const optAccents = document.getElementById('optAccents');
+    const optParentheses = document.getElementById('optParentheses');
+    const optQuotes = document.getElementById('optQuotes');
+    const optApostrophes = document.getElementById('optApostrophes');
+    const optSuffixes = document.getElementById('optSuffixes');
+    const optDedupe = document.getElementById('optDedupe');
+    const optCustomWords = document.getElementById('optCustomWords');
+    const optCasing = document.getElementById('optCasing');
+    const optDomain = document.getElementById('optDomain');
+
+    // Views
+    const viewListBtn = document.getElementById('viewListBtn');
+    const viewEmailsBtn = document.getElementById('viewEmailsBtn');
+    const viewTableBtn = document.getElementById('viewTableBtn');
+    
+    const viewList = document.getElementById('viewList');
+    const viewEmails = document.getElementById('viewEmails');
+    const viewTable = document.getElementById('viewTable');
+    const tableBody = document.getElementById('tableBody');
+
+    // Modal Drawer Elements
+    const copyModal = document.getElementById('copyModal');
+    const openCopyDrawerBtn = document.getElementById('openCopyDrawerBtn');
+    const closeCopyDrawerBtn = document.getElementById('closeCopyDrawerBtn');
+    const modalCloseDoneBtn = document.getElementById('modalCloseDoneBtn');
+    const modalNamesTab = document.getElementById('modalNamesTab');
+    const modalEmailsTab = document.getElementById('modalEmailsTab');
+    const modalCopyTextarea = document.getElementById('modalCopyTextarea');
+    const modalSelectAllBtn = document.getElementById('modalSelectAllBtn');
+
+    // Actions & Stats
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const statTotal = document.getElementById('statTotal');
+    const statCleaned = document.getElementById('statCleaned');
+    const statDupes = document.getElementById('statDupes');
+
+    let processedData = [];
+    let activeModalMode = 'names';
+
+    // --- Cleaning Engine ---
+    function cleanName(raw) {
+      if (!raw) return { original: '', cleaned: '', email: '' };
+      let name = raw.trim();
+
+      // 1. Strip everything after comma if enabled
+      if (optStripAfterComma.checked && name.includes(',')) {
+        name = name.split(',')[0].trim();
+      }
+
+      // 2. Remove periods/dots from names if enabled (e.g., "A.J." -> "AJ", "John. Doe" -> "John Doe")
+      if (optPeriods.checked) {
+        name = name.replace(/\./g, '');
+      }
+
+      // 3. Remove Non-Latin / Chinese characters
+      if (optNonLatin.checked) {
+        name = name.replace(/[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u30ff\u1100-\u11ff\u3130-\u318f\u0400-\u04ff\u0600-\u06ff\u0900-\u097f]/g, '');
+      }
+
+      // 4. Remove Verification Symbols, Emojis & Badges
+      if (optSymbols.checked) {
+        name = name.replace(/[✔☑✓✕★⚡👑👍🚩✅⭐📍🔥🏽🏼🏿]/g, '');
+        name = name.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+      }
+
+      // 5. Remove Parentheses / Brackets
+      if (optParentheses.checked) {
+        name = name.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').replace(/\{.*?\}/g, '');
+      }
+
+      // 6. Remove Nicknames in Quotes
+      if (optQuotes.checked) {
+        name = name.replace(/["'“”‘`].*?["'“”‘`]/g, '');
+      }
+
+      // 7. Remove Apostrophes for email safety (O'connor -> Oconnor)
+      if (optApostrophes.checked) {
+        name = name.replace(/['’`]/g, '');
+      }
+
+      // 8. Accent & Special Character Mapping (ø -> o, ł -> l)
+      if (optAccents.checked) {
+        for (const [char, replacement] of Object.entries(charMap)) {
+          name = name.replace(new RegExp(char, 'g'), replacement);
+        }
+        name = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      }
+
+      // 9. Remove Custom Unwanted Words / Credentials
+      const customWords = optCustomWords.value.split(',').map(w => w.trim()).filter(w => w);
+      if (customWords.length > 0) {
+        customWords.forEach(word => {
+          const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const reg = new RegExp(`\\b${escaped}\\b`, 'gi');
+          name = name.replace(reg, '');
+        });
+      }
+
+      // 10. Remove Generational Suffixes
+      if (optSuffixes.checked) {
+        generationalSuffixes.forEach(suf => {
+          const cleanedSuf = optPeriods.checked ? suf.replace(/\./g, '') : suf;
+          const escaped = cleanedSuf.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const reg = new RegExp(`\\b${escaped}\\b`, 'gi');
+          name = name.replace(reg, '');
+        });
+      }
+
+      // Cleanup trailing punctuation and excess spaces
+      name = name.replace(/[,;:]/g, ' ').replace(/\s+/g, ' ').trim();
+
+      // 11. Apply Letter Casing
+      const casing = optCasing.value;
+      if (casing === 'title') {
+        name = name.toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
+      } else if (casing === 'upper') {
+        name = name.toUpperCase();
+      } else if (casing === 'lower') {
+        name = name.toLowerCase();
+      }
+
+      // 12. Generate Clean Email ID
+      const domain = optDomain.value.trim() || 'company.com';
+      const emailLocal = name.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .trim()
+        .replace(/\s+/g, '.');
+      
+      const email = emailLocal ? `${emailLocal}@${domain}` : '';
+
+      return { original: raw, cleaned: name, email };
+    }
+
+    // Process Input
+    function processBatch() {
+      const lines = inputNames.value.split('\n');
+      inputCount.textContent = `${lines.filter(l => l.trim()).length} names`;
+
+      let results = [];
+      let seen = new Set();
+      let dupes = 0;
+
+      lines.forEach(line => {
+        if (!line.trim()) return;
+        const res = cleanName(line);
+        if (!res.cleaned) return;
+
+        if (optDedupe.checked) {
+          const key = res.cleaned.toLowerCase();
+          if (seen.has(key)) {
+            dupes++;
+            return;
+          }
+          seen.add(key);
+        }
+
+        results.push(res);
+      });
+
+      processedData = results;
+
+      statTotal.textContent = lines.filter(l => l.trim()).length;
+      statCleaned.textContent = results.length;
+      statDupes.textContent = dupes;
+
+      render();
+    }
+
+    // Render Output Views
+    function render() {
+      // List View
+      viewList.innerHTML = processedData.map((item, idx) => `
+        <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-sm hover:border-slate-700 transition">
+          <span class="font-medium text-slate-200">${item.cleaned}</span>
+          <span class="text-xs text-slate-500 font-mono">#${idx + 1}</span>
+        </div>
+      `).join('') || `<div class="text-slate-500 text-xs text-center py-10">No names to display</div>`;
+
+      // Email View
+      viewEmails.innerHTML = processedData.map((item, idx) => `
+        <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-sm hover:border-slate-700 transition">
+          <span class="font-mono text-xs text-indigo-300">${item.email}</span>
+          <span class="text-xs text-slate-500">${item.cleaned}</span>
+        </div>
+      `).join('') || `<div class="text-slate-500 text-xs text-center py-10">No email addresses generated</div>`;
+
+      // Table View
+      tableBody.innerHTML = processedData.map((item, idx) => `
+        <tr class="hover:bg-slate-800/40 transition">
+          <td class="py-2 px-3 text-slate-500 font-mono">${idx + 1}</td>
+          <td class="py-2 px-3 text-slate-400 font-mono line-through opacity-70">${item.original}</td>
+          <td class="py-2 px-3 text-emerald-400 font-semibold">${item.cleaned}</td>
+          <td class="py-2 px-3 text-indigo-300 font-mono">${item.email}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="4" class="text-center py-8 text-slate-500">No output generated</td></tr>`;
+    }
+
+    // Toast Notice
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2500);
+    }
+
+    // Google Sites Copy Modal Logic
+    function updateModalTextarea() {
+      if (activeModalMode === 'names') {
+        modalCopyTextarea.value = processedData.map(d => d.cleaned).join('\n');
+      } else {
+        modalCopyTextarea.value = processedData.map(d => d.email).join('\n');
+      }
+      setTimeout(() => {
+        modalCopyTextarea.focus();
+        modalCopyTextarea.select();
+      }, 100);
+    }
+
+    function openCopyDrawer() {
+      if (!processedData.length) return showToast("No cleaned data to copy!");
+      copyModal.classList.remove('hidden');
+      updateModalTextarea();
+    }
+
+    function closeCopyDrawer() {
+      copyModal.classList.add('hidden');
+    }
+
+    openCopyDrawerBtn.addEventListener('click', openCopyDrawer);
+    closeCopyDrawerBtn.addEventListener('click', closeCopyDrawer);
+    modalCloseDoneBtn.addEventListener('click', closeCopyDrawer);
+
+    modalNamesTab.addEventListener('click', () => {
+      activeModalMode = 'names';
+      modalNamesTab.className = 'px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white font-medium';
+      modalEmailsTab.className = 'px-3 py-1.5 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-white font-medium';
+      updateModalTextarea();
+    });
+
+    modalEmailsTab.addEventListener('click', () => {
+      activeModalMode = 'emails';
+      modalEmailsTab.className = 'px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white font-medium';
+      modalNamesTab.className = 'px-3 py-1.5 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-white font-medium';
+      updateModalTextarea();
+    });
+
+    modalSelectAllBtn.addEventListener('click', () => {
+      modalCopyTextarea.focus();
+      modalCopyTextarea.select();
+      showToast("Text re-highlighted!");
+    });
+
+    // Event Listeners for Input Controls
+    inputNames.addEventListener('input', processBatch);
+    [optStripAfterComma, optPeriods, optNonLatin, optSymbols, optAccents, optParentheses, optQuotes, optApostrophes, optSuffixes, optDedupe, optCustomWords, optCasing, optDomain].forEach(el => {
+      el.addEventListener('change', processBatch);
+      el.addEventListener('input', processBatch);
+    });
+
+    loadSampleBtn.addEventListener('click', () => {
+      inputNames.value = sampleBatch;
+      processBatch();
+      showToast("Test batch loaded!");
+    });
+
+    // View Switching
+    function switchView(activeBtn, viewEl) {
+      [viewListBtn, viewEmailsBtn, viewTableBtn].forEach(b => {
+        b.classList.remove('bg-indigo-600', 'text-white');
+        b.classList.add('text-slate-400');
+      });
+      activeBtn.classList.add('bg-indigo-600', 'text-white');
+      activeBtn.classList.remove('text-slate-400');
+
+      [viewList, viewEmails, viewTable].forEach(v => v.classList.add('hidden'));
+      viewEl.classList.remove('hidden');
+    }
+
+    viewListBtn.addEventListener('click', () => switchView(viewListBtn, viewList));
+    viewEmailsBtn.addEventListener('click', () => switchView(viewEmailsBtn, viewEmails));
+    viewTableBtn.addEventListener('click', () => switchView(viewTableBtn, viewTable));
+
+    // CSV Download
+    exportCsvBtn.addEventListener('click', () => {
+      if (!processedData.length) return showToast("Nothing to export!");
+      let csv = "Original,Cleaned Name,Email\n";
+      processedData.forEach(d => {
+        csv += `"${d.original.replace(/"/g, '""')}","${d.cleaned.replace(/"/g, '""')}","${d.email}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'cleaned_employee_list.csv';
+      a.click();
+      showToast("CSV file exported!");
+    });
+
+    // Initialization
+    inputNames.value = sampleBatch;
+    processBatch();
+  </script>
+</body>
+</html>
